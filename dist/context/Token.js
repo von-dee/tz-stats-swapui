@@ -69,13 +69,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.setMintCache = exports.useMint = exports.useOwnedTokenAccount = exports.TokenContextProvider = void 0;
 var jsx_runtime_1 = require("react/jsx-runtime");
 var react_1 = __importStar(require("react"));
-var assert = __importStar(require("assert"));
 var react_async_hook_1 = require("react-async-hook");
 var anchor_1 = require("@project-serum/anchor");
-var web3_js_1 = require("@solana/web3.js");
-var spl_token_1 = require("@solana/spl-token");
 var tokens_1 = require("../utils/tokens");
-var pubkeys_1 = require("../utils/pubkeys");
 var _TokenContext = react_1.default.createContext(null);
 function TokenContextProvider(props) {
     var provider = props.provider;
@@ -105,7 +101,7 @@ function TokenContextProvider(props) {
                     // @ts-ignore
                     account: {
                         amount: new anchor_1.BN(acc.lamports),
-                        mint: pubkeys_1.SOL_MINT,
+                        // mint: SOL_MINT,
                     },
                 });
                 setRefresh(function (r) { return r + 1; });
@@ -117,17 +113,11 @@ function TokenContextProvider(props) {
         } }, { children: props.children }), void 0));
 }
 exports.TokenContextProvider = TokenContextProvider;
-function useTokenContext() {
-    var ctx = (0, react_1.useContext)(_TokenContext);
-    if (ctx === null) {
-        throw new Error("Context not available");
-    }
-    return ctx;
-}
+function useTokenContext() { }
 // Null => none exists.
 // Undefined => loading.
 function useOwnedTokenAccount(mint) {
-    var provider = useTokenContext().provider;
+    // const { provider } = useTokenContext();
     var _a = (0, react_1.useState)(0), setRefresh = _a[1];
     var tokenAccounts = _OWNED_TOKEN_ACCOUNTS_CACHE.filter(function (account) { return mint && account.account.mint.equals(mint); });
     // Take the account with the most tokens in it.
@@ -139,50 +129,22 @@ function useOwnedTokenAccount(mint) {
                 : 0;
     });
     var tokenAccount = tokenAccounts[0];
-    var isSol = mint === null || mint === void 0 ? void 0 : mint.equals(pubkeys_1.SOL_MINT);
+    var isSol = false;
     // Stream updates when the balance changes.
     (0, react_1.useEffect)(function () {
         var listener;
         // SOL is special cased since it's not an SPL token.
         if (tokenAccount && isSol) {
-            listener = provider.connection.onAccountChange(provider.wallet.publicKey, function (info) {
-                var token = {
-                    amount: new anchor_1.BN(info.lamports),
-                    mint: pubkeys_1.SOL_MINT,
-                };
-                if (token.amount !== tokenAccount.account.amount) {
-                    var index = _OWNED_TOKEN_ACCOUNTS_CACHE.indexOf(tokenAccount);
-                    assert.ok(index >= 0);
-                    _OWNED_TOKEN_ACCOUNTS_CACHE[index].account = token;
-                    setRefresh(function (r) { return r + 1; });
-                }
-            });
         }
         // SPL tokens.
         else if (tokenAccount) {
-            listener = provider.connection.onAccountChange(tokenAccount.publicKey, function (info) {
-                if (info.data.length !== 0) {
-                    try {
-                        var token = (0, tokens_1.parseTokenAccountData)(info.data);
-                        if (token.amount !== tokenAccount.account.amount) {
-                            var index = _OWNED_TOKEN_ACCOUNTS_CACHE.indexOf(tokenAccount);
-                            assert.ok(index >= 0);
-                            _OWNED_TOKEN_ACCOUNTS_CACHE[index].account = token;
-                            setRefresh(function (r) { return r + 1; });
-                        }
-                    }
-                    catch (error) {
-                        console.log("Failed to decode token AccountInfo");
-                    }
-                }
-            });
         }
         return function () {
             if (listener) {
-                provider.connection.removeAccountChangeListener(listener);
+                // provider.connection.removeAccountChangeListener(listener);
             }
         };
-    }, [provider.connection, tokenAccount]);
+    }, []);
     if (mint === undefined) {
         return undefined;
     }
@@ -194,10 +156,8 @@ function useOwnedTokenAccount(mint) {
 exports.useOwnedTokenAccount = useOwnedTokenAccount;
 function useMint(mint) {
     var _this = this;
-    var provider = useTokenContext().provider;
     // Lazy load the mint account if needeed.
     var asyncMintInfo = (0, react_async_hook_1.useAsync)(function () { return __awaiter(_this, void 0, void 0, function () {
-        var mintClient, mintInfo;
         return __generator(this, function (_a) {
             if (!mint) {
                 return [2 /*return*/, undefined];
@@ -205,12 +165,9 @@ function useMint(mint) {
             if (_MINT_CACHE.get(mint.toString())) {
                 return [2 /*return*/, _MINT_CACHE.get(mint.toString())];
             }
-            mintClient = new spl_token_1.Token(provider.connection, mint, spl_token_1.TOKEN_PROGRAM_ID, new web3_js_1.Account());
-            mintInfo = mintClient.getMintInfo();
-            _MINT_CACHE.set(mint.toString(), mintInfo);
-            return [2 /*return*/, mintInfo];
+            return [2 /*return*/];
         });
-    }); }, [provider.connection, mint]);
+    }); }, []);
     if (asyncMintInfo.result) {
         return asyncMintInfo.result;
     }
@@ -225,6 +182,4 @@ exports.setMintCache = setMintCache;
 var _OWNED_TOKEN_ACCOUNTS_CACHE = [];
 // Cache storing all previously fetched mint infos.
 // @ts-ignore
-var _MINT_CACHE = new Map([
-    [pubkeys_1.SOL_MINT.toString(), { decimals: 9 }],
-]);
+var _MINT_CACHE = new Map([]);

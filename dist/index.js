@@ -33,14 +33,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.useBbo = exports.useMarketName = exports.useFairRoute = exports.DexContextProvider = exports.useMint = exports.TokenContextProvider = exports.useTokenMap = exports.TokenListContextProvider = exports.useSwapFair = exports.useSwapContext = exports.SwapContextProvider = exports.TokenDialog = exports.SwapButton = exports.ArrowButton = exports.SwapTokenForm = exports.SwapHeader = exports.SwapCard = exports.Swap = void 0;
+exports.useBbo = exports.useMarketName = exports.useFairRoute = exports.DexContextProvider = exports.useMint = exports.TokenContextProvider = exports.useTokenMap = exports.TokenListContextProvider = exports.useSwapContext = exports.SwapContextProvider = exports.TokenDialog = exports.SwapButton = exports.ArrowButton = exports.SwapTokenForm = exports.SwapHeader = exports.SwapCard = exports.Swap = void 0;
 var jsx_runtime_1 = require("react/jsx-runtime");
 var swap_1 = require("@project-serum/swap");
 var styles_1 = require("@material-ui/core/styles");
 var Swap_1 = require("./context/Swap");
 Object.defineProperty(exports, "SwapContextProvider", { enumerable: true, get: function () { return Swap_1.SwapContextProvider; } });
 Object.defineProperty(exports, "useSwapContext", { enumerable: true, get: function () { return Swap_1.useSwapContext; } });
-Object.defineProperty(exports, "useSwapFair", { enumerable: true, get: function () { return Swap_1.useSwapFair; } });
 var Dex_1 = require("./context/Dex");
 Object.defineProperty(exports, "DexContextProvider", { enumerable: true, get: function () { return Dex_1.DexContextProvider; } });
 Object.defineProperty(exports, "useBbo", { enumerable: true, get: function () { return Dex_1.useBbo; } });
@@ -76,9 +75,9 @@ exports.TokenDialog = TokenDialog_1.default;
  * [[SwapProps]] documentation.
  */
 function Swap(props) {
-    var containerStyle = props.containerStyle, contentStyle = props.contentStyle, swapTokenContainerStyle = props.swapTokenContainerStyle, materialTheme = props.materialTheme, provider = props.provider, tokenList = props.tokenList, fromMint = props.fromMint, toMint = props.toMint, fromAmount = props.fromAmount, toAmount = props.toAmount, referral = props.referral;
+    var containerStyle = props.containerStyle, contentStyle = props.contentStyle, swapTokenContainerStyle = props.swapTokenContainerStyle, materialTheme = props.materialTheme, tokenList = props.tokenList, fromMint = props.fromMint, toMint = props.toMint, fromAmount = props.fromAmount, toAmount = props.toAmount, referral = props.referral;
     // @ts-ignore
-    var swapClient = new swap_1.Swap(provider, tokenList);
+    var swapClient = new swap_1.Swap(tokenList);
     var theme = (0, styles_1.createMuiTheme)(materialTheme || {
         palette: {
             primary: {
@@ -94,7 +93,7 @@ function Swap(props) {
             },
         },
     });
-    return ((0, jsx_runtime_1.jsx)(styles_1.ThemeProvider, __assign({ theme: theme }, { children: (0, jsx_runtime_1.jsx)(TokenList_1.TokenListContextProvider, __assign({ tokenList: tokenList }, { children: (0, jsx_runtime_1.jsx)(Token_1.TokenContextProvider, __assign({ provider: provider }, { children: (0, jsx_runtime_1.jsx)(Dex_1.DexContextProvider, __assign({ swapClient: swapClient }, { children: (0, jsx_runtime_1.jsx)(Swap_1.SwapContextProvider, __assign({ fromMint: fromMint, toMint: toMint, fromAmount: fromAmount, toAmount: toAmount, referral: referral }, { children: (0, jsx_runtime_1.jsx)(Swap_2.default, { containerStyle: containerStyle, contentStyle: contentStyle, swapTokenContainerStyle: swapTokenContainerStyle }, void 0) }), void 0) }), void 0) }), void 0) }), void 0) }), void 0));
+    return ((0, jsx_runtime_1.jsx)(styles_1.ThemeProvider, __assign({ theme: theme }, { children: (0, jsx_runtime_1.jsx)(TokenList_1.TokenListContextProvider, __assign({ tokenList: tokenList }, { children: (0, jsx_runtime_1.jsx)(Swap_1.SwapContextProvider, __assign({ fromMint: fromMint, toMint: toMint, fromAmount: fromAmount, toAmount: toAmount, referral: referral }, { children: (0, jsx_runtime_1.jsx)(Swap_2.default, { containerStyle: containerStyle, contentStyle: contentStyle, swapTokenContainerStyle: swapTokenContainerStyle }, void 0) }), void 0) }), void 0) }), void 0));
 }
 exports.default = Swap;
 exports.Swap = Swap;

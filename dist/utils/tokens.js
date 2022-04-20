@@ -59,9 +59,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseTokenAccountData = exports.getOwnedAssociatedTokenAccounts = void 0;
 var BufferLayout = __importStar(require("buffer-layout"));
-var anchor_1 = require("@project-serum/anchor");
-var spl_token_1 = require("@solana/spl-token");
-var web3_js_1 = require("@solana/web3.js");
 function getOwnedAssociatedTokenAccounts(connection, publicKey) {
     return __awaiter(this, void 0, void 0, function () {
         var filters, resp, accs;
@@ -70,40 +67,20 @@ function getOwnedAssociatedTokenAccounts(connection, publicKey) {
             switch (_a.label) {
                 case 0:
                     filters = getOwnedAccountsFilters(publicKey);
-                    return [4 /*yield*/, connection.getProgramAccounts(spl_token_1.TOKEN_PROGRAM_ID, {
+                    return [4 /*yield*/, connection.getProgramAccounts(TOKEN_PROGRAM_ID, {
                             commitment: connection.commitment,
                             filters: filters,
                         })];
                 case 1:
                     resp = _a.sent();
-                    accs = resp
-                        .map(function (_a) {
-                        var pubkey = _a.pubkey, _b = _a.account, data = _b.data, executable = _b.executable, owner = _b.owner, lamports = _b.lamports;
-                        return ({
-                            publicKey: new web3_js_1.PublicKey(pubkey),
-                            accountInfo: {
-                                data: data,
-                                executable: executable,
-                                owner: new web3_js_1.PublicKey(owner),
-                                lamports: lamports,
-                            },
-                        });
-                    })
-                        .map(function (_a) {
-                        var publicKey = _a.publicKey, accountInfo = _a.accountInfo;
-                        return { publicKey: publicKey, account: parseTokenAccountData(accountInfo.data) };
-                    });
+                    accs = resp;
                     return [4 /*yield*/, Promise.all(accs
                             // @ts-ignore
                             .map(function (ta) { return __awaiter(_this, void 0, void 0, function () {
                             var ata;
                             return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0: return [4 /*yield*/, spl_token_1.Token.getAssociatedTokenAddress(spl_token_1.ASSOCIATED_TOKEN_PROGRAM_ID, spl_token_1.TOKEN_PROGRAM_ID, ta.account.mint, publicKey)];
-                                    case 1:
-                                        ata = _a.sent();
-                                        return [2 /*return*/, [ta, ata]];
-                                }
+                                ata = null;
+                                return [2 /*return*/, [ta, ata]];
                             });
                         }); }))];
                 case 2: return [2 /*return*/, ((_a.sent())
@@ -133,9 +110,9 @@ function parseTokenAccountData(data) {
     var _a = ACCOUNT_LAYOUT.decode(data), mint = _a.mint, owner = _a.owner, amount = _a.amount;
     // @ts-ignore
     return {
-        mint: new web3_js_1.PublicKey(mint),
-        owner: new web3_js_1.PublicKey(owner),
-        amount: new anchor_1.BN(amount),
+    // mint: new PublicKey(mint),
+    // owner: new PublicKey(owner),
+    // amount: new BN(amount),
     };
 }
 exports.parseTokenAccountData = parseTokenAccountData;

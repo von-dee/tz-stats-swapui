@@ -13,7 +13,6 @@ var __assign = (this && this.__assign) || function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var jsx_runtime_1 = require("react/jsx-runtime");
 var react_1 = require("react");
-var web3_js_1 = require("@solana/web3.js");
 var core_1 = require("@material-ui/core");
 var Swap_1 = require("./Swap");
 var TokenList_1 = require("../context/TokenList");
@@ -62,8 +61,6 @@ function TokenDialog(_a) {
                 t.name.toLowerCase().startsWith(filter) ||
                 t.address.toLowerCase().startsWith(filter);
         });
-    console.log("Token List");
-    console.log(selectedTokens);
     return ((0, jsx_runtime_1.jsxs)(core_1.Dialog, __assign({ open: open, onClose: onClose, scroll: "paper", PaperProps: {
             style: {
                 borderRadius: "10px",
@@ -83,8 +80,8 @@ function TokenDialog(_a) {
 exports.default = TokenDialog;
 function TokenListItem(_a) {
     var tokenInfo = _a.tokenInfo, onClick = _a.onClick;
-    var mint = new web3_js_1.PublicKey(tokenInfo.address);
-    return ((0, jsx_runtime_1.jsxs)(core_1.ListItem, __assign({ button: true, onClick: function () { return onClick(mint); }, style: { padding: "10px 20px" } }, { children: [(0, jsx_runtime_1.jsx)(Swap_1.TokenIcon, { mint: mint, style: { width: "30px", borderRadius: "15px", color: "white" } }, void 0), (0, jsx_runtime_1.jsx)(TokenName, { tokenInfo: tokenInfo }, void 0)] }), void 0));
+    var mint = tokenInfo.address;
+    return ((0, jsx_runtime_1.jsxs)(core_1.ListItem, __assign({ button: true, onClick: function () { return onClick(mint); }, style: { padding: "10px 20px" } }, { children: [(0, jsx_runtime_1.jsx)(Swap_1.TokenIcon, { mint: mint, style: { height: "30px", borderRadius: "15px", color: "white" } }, void 0), (0, jsx_runtime_1.jsx)(TokenName, { tokenInfo: tokenInfo }, void 0)] }), void 0));
 }
 function TokenName(_a) {
     var tokenInfo = _a.tokenInfo;

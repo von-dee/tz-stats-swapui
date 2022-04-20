@@ -66,37 +66,28 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.useReferral = exports.useCanSwap = exports.useSwapFair = exports.useSwapContext = exports.SwapContextProvider = void 0;
+exports.useReferral = exports.useCanSwap = exports.useSwapContext = exports.SwapContextProvider = void 0;
 var jsx_runtime_1 = require("react/jsx-runtime");
 var assert = __importStar(require("assert"));
 var react_1 = __importStar(require("react"));
 var react_async_hook_1 = require("react-async-hook");
-var spl_token_1 = require("@solana/spl-token");
 var pubkeys_1 = require("../utils/pubkeys");
-var Dex_1 = require("./Dex");
 var TokenList_1 = require("./TokenList");
 var Token_1 = require("../context/Token");
 var DEFAULT_SLIPPAGE_PERCENT = 0.5;
 var _SwapContext = react_1.default.createContext(null);
 function SwapContextProvider(props) {
     var _a, _b, _c, _d;
-    var _e = (0, react_1.useState)((_a = props.fromMint) !== null && _a !== void 0 ? _a : pubkeys_1.SRM_MINT), fromMint = _e[0], setFromMint = _e[1];
-    var _f = (0, react_1.useState)((_b = props.toMint) !== null && _b !== void 0 ? _b : pubkeys_1.USDC_MINT), toMint = _f[0], setToMint = _f[1];
+    var _e = (0, react_1.useState)((_a = props.fromMint) !== null && _a !== void 0 ? _a : pubkeys_1.TEZ_MINT), fromMint = _e[0], setFromMint = _e[1];
+    var _f = (0, react_1.useState)((_b = props.toMint) !== null && _b !== void 0 ? _b : pubkeys_1.QUP_MINT), toMint = _f[0], setToMint = _f[1];
     var _g = (0, react_1.useState)((_c = props.fromAmount) !== null && _c !== void 0 ? _c : 0), fromAmount = _g[0], _setFromAmount = _g[1];
     var _h = (0, react_1.useState)((_d = props.toAmount) !== null && _d !== void 0 ? _d : 0), toAmount = _h[0], _setToAmount = _h[1];
     var _j = (0, react_1.useState)(false), isClosingNewAccounts = _j[0], setIsClosingNewAccounts = _j[1];
     var _k = (0, react_1.useState)(false), isStrict = _k[0], setIsStrict = _k[1];
     var _l = (0, react_1.useState)(DEFAULT_SLIPPAGE_PERCENT), slippage = _l[0], setSlippage = _l[1];
     var _m = (0, react_1.useState)(null), fairOverride = _m[0], setFairOverride = _m[1];
-    var fair = _useSwapFair(fromMint, toMint, fairOverride);
     var referral = props.referral;
     assert.ok(slippage >= 0);
-    (0, react_1.useEffect)(function () {
-        if (!fair) {
-            return;
-        }
-        setFromAmount(fromAmount);
-    }, [fair]);
     var swapToFromMints = function () {
         var oldFrom = fromMint;
         var oldTo = toMint;
@@ -106,22 +97,10 @@ function SwapContextProvider(props) {
         setToMint(oldFrom);
     };
     var setFromAmount = function (amount) {
-        if (fair === undefined) {
-            _setFromAmount(0);
-            _setToAmount(0);
-            return;
-        }
         _setFromAmount(amount);
-        _setToAmount(Dex_1.FEE_MULTIPLIER * (amount / fair));
     };
     var setToAmount = function (amount) {
-        if (fair === undefined) {
-            _setFromAmount(0);
-            _setToAmount(0);
-            return;
-        }
         _setToAmount(amount);
-        _setFromAmount((amount * fair) / Dex_1.FEE_MULTIPLIER);
     };
     return ((0, jsx_runtime_1.jsx)(_SwapContext.Provider, __assign({ value: {
             fromMint: fromMint,
@@ -153,54 +132,20 @@ function useSwapContext() {
     return ctx;
 }
 exports.useSwapContext = useSwapContext;
-function useSwapFair() {
-    var _a = useSwapContext(), fairOverride = _a.fairOverride, fromMint = _a.fromMint, toMint = _a.toMint;
-    return _useSwapFair(fromMint, toMint, fairOverride);
-}
-exports.useSwapFair = useSwapFair;
-function _useSwapFair(fromMint, toMint, fairOverride) {
-    var fairRoute = (0, Dex_1.useFairRoute)(fromMint, toMint);
-    var fair = fairOverride === null ? fairRoute : fairOverride;
-    return fair;
-}
 // Returns true if the user can swap with the current context.
 function useCanSwap() {
-    var _a, _b, _c, _d;
-    var _e = useSwapContext(), fromMint = _e.fromMint, toMint = _e.toMint, fromAmount = _e.fromAmount, toAmount = _e.toAmount;
-    var swapClient = (0, Dex_1.useDexContext)().swapClient;
-    var _f = (0, TokenList_1.useTokenListContext)(), wormholeMap = _f.wormholeMap, solletMap = _f.solletMap;
+    var _a = useSwapContext(), fromMint = _a.fromMint, toMint = _a.toMint, fromAmount = _a.fromAmount, toAmount = _a.toAmount;
+    var _b = (0, TokenList_1.useTokenListContext)(), wormholeMap = _b.wormholeMap, solletMap = _b.solletMap;
     var fromWallet = (0, Token_1.useOwnedTokenAccount)(fromMint);
-    var fair = useSwapFair();
-    var route = (0, Dex_1.useRouteVerbose)(fromMint, toMint);
-    if (route === null) {
-        return false;
-    }
     return (
     // From wallet exists.
     fromWallet !== undefined &&
         fromWallet !== null &&
-        // Fair price is defined.
-        fair !== undefined &&
-        fair > 0 &&
         // Mints are distinct.
         fromMint.equals(toMint) === false &&
-        // Wallet is connected.
-        swapClient.program.provider.wallet.publicKey !== null &&
         // Trade amounts greater than zero.
         fromAmount > 0 &&
-        toAmount > 0 &&
-        // Trade route exists.
-        route !== null &&
-        // Wormhole <-> native markets must have the wormhole token as the
-        // *from* address since they're one-sided markets.
-        (route.kind !== "wormhole-native" ||
-            ((_b = (_a = wormholeMap
-                .get(fromMint.toString())) === null || _a === void 0 ? void 0 : _a.tags) === null || _b === void 0 ? void 0 : _b.includes(TokenList_1.SPL_REGISTRY_WORM_TAG)) !== undefined) &&
-        // Wormhole <-> sollet markets must have the sollet token as the
-        // *from* address since they're one sided markets.
-        (route.kind !== "wormhole-sollet" ||
-            ((_d = (_c = solletMap
-                .get(fromMint.toString())) === null || _c === void 0 ? void 0 : _c.tags) === null || _d === void 0 ? void 0 : _d.includes(TokenList_1.SPL_REGISTRY_SOLLET_TAG)) !== undefined));
+        toAmount > 0);
 }
 exports.useCanSwap = useCanSwap;
 function useReferral(fromMarket) {
@@ -214,11 +159,7 @@ function useReferral(fromMarket) {
             if (!fromMarket) {
                 return [2 /*return*/, undefined];
             }
-            if (!fromMarket.quoteMintAddress.equals(pubkeys_1.USDC_MINT) &&
-                !fromMarket.quoteMintAddress.equals(pubkeys_1.USDT_MINT)) {
-                return [2 /*return*/, undefined];
-            }
-            return [2 /*return*/, spl_token_1.Token.getAssociatedTokenAddress(spl_token_1.ASSOCIATED_TOKEN_PROGRAM_ID, spl_token_1.TOKEN_PROGRAM_ID, fromMarket.quoteMintAddress, referral)];
+            return [2 /*return*/, null];
         });
     }); }, [fromMarket]);
     if (!asyncReferral.result) {

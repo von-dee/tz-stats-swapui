@@ -33,34 +33,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.useSwappableTokens = exports.useTokenMap = exports.useTokenListContext = exports.TokenListContextProvider = exports.SPL_REGISTRY_WORM_TAG = exports.SPL_REGISTRY_SOLLET_TAG = void 0;
 var jsx_runtime_1 = require("react/jsx-runtime");
 var react_1 = __importStar(require("react"));
-var pubkeys_1 = require("../utils/pubkeys");
 var _TokenListContext = react_1.default.createContext(null);
 // Tag in the spl-token-registry for sollet wrapped tokens.
 exports.SPL_REGISTRY_SOLLET_TAG = "wrapped-sollet";
 // Tag in the spl-token-registry for wormhole wrapped tokens.
 exports.SPL_REGISTRY_WORM_TAG = "wormhole";
-var SOL_TOKEN_INFO = {
-    chainId: 101,
-    address: pubkeys_1.SOL_MINT.toString(),
-    name: "Native SOL",
-    decimals: "9",
-    symbol: "SOL",
-    logoURI: "https://cdn.jsdelivr.net/gh/trustwallet/assets@master/blockchains/solana/info/logo.png",
-    tags: [],
-    extensions: {
-        website: "https://solana.com/",
-        serumV3Usdc: "9wFFyRfZBsuAha4YcuxcXLKwMxJR43S7fPfQLusDBzvT",
-        serumV3Usdt: "HWHvQhFmJB3NUcu1aihKmrKegfVxBEHzwVX6yZCKEsi1",
-        coingeckoId: "solana",
-        waterfallbot: "https://t.me/SOLwaterfall",
-    },
-};
 function TokenListContextProvider(props) {
     var tokenList = (0, react_1.useMemo)(function () {
-        var list = props.tokenList.filterByClusterSlug("mainnet-beta").getList();
+        var list = props.tokenList;
         // Manually add a fake SOL mint for the native token. The component is
         // opinionated in that it distinguishes between wrapped SOL and SOL.
-        list.push(SOL_TOKEN_INFO);
         return list;
     }, [props.tokenList]);
     // Token map for quick lookup.

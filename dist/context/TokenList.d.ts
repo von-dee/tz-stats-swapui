@@ -1,21 +1,20 @@
 /// <reference types="react" />
-import { TokenInfo } from "@solana/spl-token-registry";
 declare type TokenListContext = {
-    tokenMap: Map<string, TokenInfo>;
-    wormholeMap: Map<string, TokenInfo>;
-    solletMap: Map<string, TokenInfo>;
-    swappableTokens: TokenInfo[];
-    swappableTokensSollet: TokenInfo[];
-    swappableTokensWormhole: TokenInfo[];
+    tokenMap: Map<string, any>;
+    wormholeMap: Map<string, any>;
+    solletMap: Map<string, any>;
+    swappableTokens: any[];
+    swappableTokensSollet: any[];
+    swappableTokensWormhole: any[];
 };
 export declare const SPL_REGISTRY_SOLLET_TAG = "wrapped-sollet";
 export declare const SPL_REGISTRY_WORM_TAG = "wormhole";
 export declare function TokenListContextProvider(props: any): JSX.Element;
 export declare function useTokenListContext(): TokenListContext;
-export declare function useTokenMap(): Map<string, TokenInfo>;
+export declare function useTokenMap(): Map<string, any>;
 export declare function useSwappableTokens(): {
-    swappableTokens: TokenInfo[];
-    swappableTokensWormhole: TokenInfo[];
-    swappableTokensSollet: TokenInfo[];
+    swappableTokens: any[];
+    swappableTokensWormhole: any[];
+    swappableTokensSollet: any[];
 };
 export {};

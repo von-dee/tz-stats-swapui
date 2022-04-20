@@ -1,9 +1,6 @@
 import { ReactElement } from "react";
-import { PublicKey } from "@solana/web3.js";
-import { TokenListContainer } from "@solana/spl-token-registry";
-import { Provider } from "@project-serum/anchor";
 import { ThemeOptions } from "@material-ui/core/styles";
-import { SwapContextProvider, useSwapContext, useSwapFair } from "./context/Swap";
+import { SwapContextProvider, useSwapContext } from "./context/Swap";
 import { DexContextProvider, useBbo, useFairRoute, useMarketName } from "./context/Dex";
 import { TokenListContextProvider, useTokenMap } from "./context/TokenList";
 import { TokenContextProvider, useMint } from "./context/Token";
@@ -33,26 +30,25 @@ export declare type SwapProps = {
      * Wallet and network provider. Apps can use a `Provider` subclass to hook
      * into all transactions intitiated by the component.
      */
-    provider: Provider;
     /**
      * Token list providing information for tokens used.
      */
-    tokenList: TokenListContainer;
+    tokenList: any;
     /**
      * Wallet address to which referral fees are sent (i.e. a SOL address).
      * To receive referral fees, the wallet must *own* associated token
      * accounts for the token in which the referral is paid  (usually USDC
      * or USDT).
      */
-    referral?: PublicKey;
+    referral?: any;
     /**
      * The default `fromMint` to use when the component first renders.
      */
-    fromMint?: PublicKey;
+    fromMint?: any;
     /**
      * The default `toMint` to use when the component first renders.
      */
-    toMint?: PublicKey;
+    toMint?: any;
     /**
      * The initial amount for the `fromMint` to use when the component first
      * renders.
@@ -80,4 +76,4 @@ export declare type SwapProps = {
      */
     swapTokenContainerStyle?: any;
 };
-export { Swap, SwapCard, SwapHeader, SwapTokenForm, ArrowButton, SwapButton, TokenDialog, SwapContextProvider, useSwapContext, useSwapFair, TokenListContextProvider, useTokenMap, TokenContextProvider, useMint, DexContextProvider, useFairRoute, useMarketName, useBbo, };
+export { Swap, SwapCard, SwapHeader, SwapTokenForm, ArrowButton, SwapButton, TokenDialog, SwapContextProvider, useSwapContext, TokenListContextProvider, useTokenMap, TokenContextProvider, useMint, DexContextProvider, useFairRoute, useMarketName, useBbo, };

@@ -40,7 +40,6 @@ var core_1 = require("@material-ui/core");
 var icons_1 = require("@material-ui/icons");
 var material_ui_popup_state_1 = __importStar(require("material-ui-popup-state"));
 var Swap_1 = require("../context/Swap");
-var Dex_1 = require("../context/Dex");
 var OpenOrdersDialog_1 = __importDefault(require("./OpenOrdersDialog"));
 var useStyles = (0, core_1.makeStyles)(function (theme) { return ({
     tab: {
@@ -95,8 +94,7 @@ function SettingsDetails() {
     var styles = useStyles();
     var _a = (0, Swap_1.useSwapContext)(), slippage = _a.slippage, setSlippage = _a.setSlippage, fairOverride = _a.fairOverride, setFairOverride = _a.setFairOverride;
     var _b = (0, react_1.useState)(false), showSettingsDialog = _b[0], setShowSettingsDialog = _b[1];
-    var fair = (0, Swap_1.useSwapFair)();
-    var swapClient = (0, Dex_1.useDexContext)().swapClient;
+    var fair = 0;
     var setSlippageHandler = function (value) {
         setSlippage(!value || value < 0 ? 0 : value);
     };
@@ -133,7 +131,7 @@ function SettingsDetails() {
                                             }
                                         }, className: fairOverride === null
                                             ? styles.fairAutoSelected
-                                            : styles.fairAuto }, { children: "Auto" }), void 0)] }), void 0)] }), void 0), (0, jsx_runtime_1.jsx)("div", __assign({ style: { margin: "10px 0px" } }, { children: (0, jsx_runtime_1.jsx)(CloseNewAccountsSwitch, {}, void 0) }), void 0), (0, jsx_runtime_1.jsx)(core_1.Button, __assign({ variant: "contained", fullWidth: true, style: { color: "#fff" }, disabled: swapClient.program.provider.wallet.publicKey === null, onClick: function () { return setShowSettingsDialog(true); } }, { children: "Manage Dex Accounts" }), void 0)] }, void 0), (0, jsx_runtime_1.jsx)(OpenOrdersDialog_1.default, { open: showSettingsDialog, onClose: function () { return setShowSettingsDialog(false); } }, void 0)] }), void 0));
+                                            : styles.fairAuto }, { children: "Auto" }), void 0)] }), void 0)] }), void 0), (0, jsx_runtime_1.jsx)("div", __assign({ style: { margin: "10px 0px" } }, { children: (0, jsx_runtime_1.jsx)(CloseNewAccountsSwitch, {}, void 0) }), void 0), (0, jsx_runtime_1.jsx)(core_1.Button, __assign({ variant: "contained", fullWidth: true, style: { color: "#fff" }, onClick: function () { return setShowSettingsDialog(true); } }, { children: "Manage Dex Accounts" }), void 0)] }, void 0), (0, jsx_runtime_1.jsx)(OpenOrdersDialog_1.default, { open: showSettingsDialog, onClose: function () { return setShowSettingsDialog(false); } }, void 0)] }), void 0));
 }
 function CloseNewAccountsSwitch() {
     var styles = useStyles();

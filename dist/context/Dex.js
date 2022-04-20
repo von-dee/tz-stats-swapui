@@ -69,16 +69,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.useRouteVerbose = exports.useRoute = exports.useFairRoute = exports.useBbo = exports.useMarketName = exports.useOrderbook = exports.useMarket = exports.useOpenOrders = exports.useDexContext = exports.DexContextProvider = exports.FEE_MULTIPLIER = void 0;
 var jsx_runtime_1 = require("react/jsx-runtime");
 var react_1 = __importStar(require("react"));
-var assert = __importStar(require("assert"));
 var react_async_hook_1 = require("react-async-hook");
-var spl_token_1 = require("@solana/spl-token");
-var web3_js_1 = require("@solana/web3.js");
-var anchor = __importStar(require("@project-serum/anchor"));
 var serum_1 = require("@project-serum/serum");
-var pubkeys_1 = require("../utils/pubkeys");
 var TokenList_1 = require("./TokenList");
 var Sollet_1 = require("./Sollet");
-var Token_1 = require("./Token");
 var BASE_TAKER_FEE_BPS = 0.0022;
 exports.FEE_MULTIPLIER = 1 - BASE_TAKER_FEE_BPS;
 var _DexContext = react_1.default.createContext(null);
@@ -104,89 +98,6 @@ function DexContextProvider(props) {
             return [2 /*return*/];
         });
     }); };
-    // Three operations:
-    //
-    // 1. Fetch all open orders accounts for the connected wallet.
-    // 2. Batch fetch all market accounts for those open orders.
-    // 3. Batch fetch all mints associated with the markets.
-    (0, react_1.useEffect)(function () {
-        if (!swapClient.program.provider.wallet.publicKey) {
-            setOoAccounts(new Map());
-            return;
-        }
-        serum_1.OpenOrders.findForOwner(swapClient.program.provider.connection, swapClient.program.provider.wallet.publicKey, pubkeys_1.DEX_PID).then(function (openOrders) { return __awaiter(_this, void 0, void 0, function () {
-            var newOoAccounts, markets, multipleMarkets, marketClients, mintPubkeys, mints, mintInfos;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        newOoAccounts = new Map();
-                        markets = new Set();
-                        openOrders.forEach(function (oo) {
-                            markets.add(oo.market.toString());
-                            if (newOoAccounts.get(oo.market.toString())) {
-                                newOoAccounts.get(oo.market.toString()).push(oo);
-                            }
-                            else {
-                                newOoAccounts.set(oo.market.toString(), [oo]);
-                            }
-                        });
-                        if (markets.size > 100) {
-                            // Punt request chunking until there's user demand.
-                            throw new Error("Too many markets. Please file an issue to update this");
-                        }
-                        return [4 /*yield*/, anchor.utils.rpc.getMultipleAccounts(swapClient.program.provider.connection, Array.from(markets.values()).map(function (m) { return new web3_js_1.PublicKey(m); }))];
-                    case 1:
-                        multipleMarkets = _a.sent();
-                        marketClients = multipleMarkets.map(function (programAccount) {
-                            return {
-                                publicKey: programAccount === null || programAccount === void 0 ? void 0 : programAccount.publicKey,
-                                account: new serum_1.Market(serum_1.Market.getLayout(pubkeys_1.DEX_PID).decode(programAccount === null || programAccount === void 0 ? void 0 : programAccount.account.data), -1, // Set below so that we can batch fetch mints.
-                                -1, // Set below so that we can batch fetch mints.
-                                swapClient.program.provider.opts, pubkeys_1.DEX_PID),
-                            };
-                        });
-                        setOoAccounts(newOoAccounts);
-                        mintPubkeys = Array.from(new Set(marketClients
-                            .map(function (m) { return [
-                            m.account.baseMintAddress.toString(),
-                            m.account.quoteMintAddress.toString(),
-                        ]; })
-                            .flat()).values()).map(function (pk) { return new web3_js_1.PublicKey(pk); });
-                        if (mintPubkeys.length > 100) {
-                            // Punt request chunking until there's user demand.
-                            throw new Error("Too many mints. Please file an issue to update this");
-                        }
-                        return [4 /*yield*/, anchor.utils.rpc.getMultipleAccounts(swapClient.program.provider.connection, mintPubkeys)];
-                    case 2:
-                        mints = _a.sent();
-                        mintInfos = mints.map(function (mint) {
-                            var mintInfo = spl_token_1.MintLayout.decode(mint.account.data);
-                            (0, Token_1.setMintCache)(mint.publicKey, mintInfo);
-                            return { publicKey: mint.publicKey, mintInfo: mintInfo };
-                        });
-                        marketClients.forEach(function (m) {
-                            var baseMintInfo = mintInfos.filter(function (mint) {
-                                return mint.publicKey.equals(m.account.baseMintAddress);
-                            })[0];
-                            var quoteMintInfo = mintInfos.filter(function (mint) {
-                                return mint.publicKey.equals(m.account.quoteMintAddress);
-                            })[0];
-                            assert.ok(baseMintInfo && quoteMintInfo);
-                            // @ts-ignore
-                            m.account._baseSplTokenDecimals = baseMintInfo.mintInfo.decimals;
-                            // @ts-ignore
-                            m.account._quoteSplTokenDecimals = quoteMintInfo.mintInfo.decimals;
-                            _MARKET_CACHE.set(m.publicKey.toString(), new Promise(function (resolve) { return resolve(m.account); }));
-                        });
-                        return [2 /*return*/];
-                }
-            });
-        }); });
-    }, [
-        swapClient.program.provider.connection,
-        swapClient.program.provider.wallet.publicKey,
-        swapClient.program.provider.opts,
-    ]);
     return ((0, jsx_runtime_1.jsx)(_DexContext.Provider, __assign({ value: {
             openOrders: ooAccounts,
             closeOpenOrders: closeOpenOrders,
@@ -212,8 +123,6 @@ function useMarket(market) {
     var _this = this;
     var swapClient = useDexContext().swapClient;
     var asyncMarket = (0, react_async_hook_1.useAsync)(function () { return __awaiter(_this, void 0, void 0, function () {
-        var marketClient;
-        var _this = this;
         return __generator(this, function (_a) {
             if (!market) {
                 return [2 /*return*/, undefined];
@@ -221,20 +130,7 @@ function useMarket(market) {
             if (_MARKET_CACHE.get(market.toString())) {
                 return [2 /*return*/, _MARKET_CACHE.get(market.toString())];
             }
-            marketClient = new Promise(function (resolve) { return __awaiter(_this, void 0, void 0, function () {
-                var marketClient;
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0: return [4 /*yield*/, serum_1.Market.load(swapClient.program.provider.connection, market, swapClient.program.provider.opts, pubkeys_1.DEX_PID)];
-                        case 1:
-                            marketClient = _a.sent();
-                            resolve(marketClient);
-                            return [2 /*return*/];
-                    }
-                });
-            }); });
-            _MARKET_CACHE.set(market.toString(), marketClient);
-            return [2 /*return*/, marketClient];
+            return [2 /*return*/];
         });
     }); }, [swapClient.program.provider.connection, market]);
     if (asyncMarket.result) {
@@ -414,14 +310,6 @@ function useFairRoute(fromMint, toMint) {
         if (fromMarket === undefined) {
             return undefined;
         }
-        if ((fromMarket === null || fromMarket === void 0 ? void 0 : fromMarket.baseMintAddress.equals(fromMint)) ||
-            ((fromMarket === null || fromMarket === void 0 ? void 0 : fromMarket.baseMintAddress.equals(pubkeys_1.WRAPPED_SOL_MINT)) &&
-                fromMint.equals(pubkeys_1.SOL_MINT))) {
-            return fromBbo.bestBid && 1.0 / fromBbo.bestBid;
-        }
-        else {
-            return fromBbo.bestOffer && fromBbo.bestOffer;
-        }
     }
     if (fromBbo === undefined ||
         fromBbo.bestBid === undefined ||
@@ -452,23 +340,8 @@ function useRouteVerbose(fromMint, toMint) {
     var swapClient = useDexContext().swapClient;
     var _a = (0, TokenList_1.useTokenListContext)(), wormholeMap = _a.wormholeMap, solletMap = _a.solletMap;
     var asyncRoute = (0, react_async_hook_1.useAsync)(function () { return __awaiter(_this, void 0, void 0, function () {
-        var swapMarket, wormholeMarket, kind_1, markets, kind;
         return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, wormholeSwapMarket(swapClient.program.provider.connection, fromMint, toMint, wormholeMap, solletMap)];
-                case 1:
-                    swapMarket = _a.sent();
-                    if (swapMarket !== null) {
-                        wormholeMarket = swapMarket[0], kind_1 = swapMarket[1];
-                        return [2 /*return*/, { markets: [wormholeMarket], kind: kind_1 }];
-                    }
-                    markets = swapClient.route(fromMint.equals(pubkeys_1.SOL_MINT) ? pubkeys_1.WRAPPED_SOL_MINT : fromMint, toMint.equals(pubkeys_1.SOL_MINT) ? pubkeys_1.WRAPPED_SOL_MINT : toMint);
-                    if (markets === null) {
-                        return [2 /*return*/, null];
-                    }
-                    kind = "usdx";
-                    return [2 /*return*/, { markets: markets, kind: kind }];
-            }
+            return [2 /*return*/];
         });
     }); }, [fromMint, toMint, swapClient]);
     if (asyncRoute.result) {
@@ -480,45 +353,20 @@ exports.useRouteVerbose = useRouteVerbose;
 // Maps fromMint || toMint (in sort order) to swap market public key.
 // All markets for wormhole<->native tokens should be here, e.g.
 // USDC <-> wUSDC.
-var WORMHOLE_NATIVE_MAP = new Map([
-    [wormKey(pubkeys_1.WORM_USDC_MINT, pubkeys_1.USDC_MINT), pubkeys_1.WORM_USDC_MARKET],
-    [wormKey(pubkeys_1.WORM_USDT_MINT, pubkeys_1.USDT_MINT), pubkeys_1.WORM_USDT_MARKET],
-]);
+// const WORMHOLE_NATIVE_MAP = new Map<string, PublicKey>([
+//   [wormKey(WORM_USDC_MINT, USDC_MINT), WORM_USDC_MARKET],
+//   [wormKey(WORM_USDT_MINT, USDT_MINT), WORM_USDT_MARKET],
+// ]);
 function wormKey(fromMint, toMint) {
     var _a = fromMint < toMint ? [fromMint, toMint] : [toMint, fromMint], first = _a[0], second = _a[1];
     return first.toString() + second.toString();
-}
-function wormholeSwapMarket(conn, fromMint, toMint, wormholeMap, solletMap) {
-    return __awaiter(this, void 0, void 0, function () {
-        var market;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    market = wormholeNativeMarket(fromMint, toMint);
-                    if (market !== null) {
-                        return [2 /*return*/, [market, "wormhole-native"]];
-                    }
-                    return [4 /*yield*/, wormholeSolletMarket(conn, fromMint, toMint, wormholeMap, solletMap)];
-                case 1:
-                    market = _a.sent();
-                    if (market === null) {
-                        return [2 /*return*/, null];
-                    }
-                    return [2 /*return*/, [market, "wormhole-sollet"]];
-            }
-        });
-    });
-}
-function wormholeNativeMarket(fromMint, toMint) {
-    var _a;
-    return (_a = WORMHOLE_NATIVE_MAP.get(wormKey(fromMint, toMint))) !== null && _a !== void 0 ? _a : null;
 }
 // Returns the market address of the 1-1 sollet<->wormhole swap market if it
 // exists. Otherwise, returns null.
 function wormholeSolletMarket(conn, fromMint, toMint, wormholeMap, solletMap) {
     var _a;
     return __awaiter(this, void 0, void 0, function () {
-        var fromWormhole, isFromWormhole, toWormhole, isToWormhole, fromSollet, isFromSollet, toSollet, isToSollet, base, _b, quote, wormholeInfo, solletInfo, market, marketExists;
+        var fromWormhole, isFromWormhole, toWormhole, isToWormhole, fromSollet, isFromSollet, toSollet, isToSollet, base, _b, quote, wormholeInfo, solletInfo;
         return __generator(this, function (_c) {
             switch (_c.label) {
                 case 0:
@@ -530,8 +378,8 @@ function wormholeSolletMarket(conn, fromMint, toMint, wormholeMap, solletMap) {
                     isFromSollet = fromSollet !== undefined;
                     toSollet = solletMap.get(toMint.toString());
                     isToSollet = toSollet !== undefined;
-                    if (!((isFromWormhole || isToWormhole) && isFromWormhole !== isToWormhole)) return [3 /*break*/, 4];
-                    if (!((isFromSollet || isToSollet) && isFromSollet !== isToSollet)) return [3 /*break*/, 4];
+                    if (!((isFromWormhole || isToWormhole) && isFromWormhole !== isToWormhole)) return [3 /*break*/, 2];
+                    if (!((isFromSollet || isToSollet) && isFromSollet !== isToSollet)) return [3 /*break*/, 2];
                     base = isFromSollet ? fromMint : toMint;
                     _b = isFromWormhole
                         ? [fromMint, fromWormhole]
@@ -542,47 +390,8 @@ function wormholeSolletMarket(conn, fromMint, toMint, wormholeMap, solletMap) {
                     if (solletInfo.erc20Contract !== ((_a = wormholeInfo.extensions) === null || _a === void 0 ? void 0 : _a.address)) {
                         return [2 /*return*/, null];
                     }
-                    return [4 /*yield*/, deriveWormholeMarket(base, quote)];
-                case 2:
-                    market = _c.sent();
-                    if (market === null) {
-                        return [2 /*return*/, null];
-                    }
-                    return [4 /*yield*/, (0, Sollet_1.requestWormholeSwapMarketIfNeeded)(conn, base, quote, market, solletInfo)];
-                case 3:
-                    marketExists = _c.sent();
-                    if (!marketExists) {
-                        return [2 /*return*/, null];
-                    }
-                    return [2 /*return*/, market];
-                case 4: return [2 /*return*/, null];
-            }
-        });
-    });
-}
-// Calculates the deterministic address for the sollet<->wormhole 1-1 swap
-// market.
-function deriveWormholeMarket(baseMint, quoteMint, version) {
-    if (version === void 0) { version = 0; }
-    return __awaiter(this, void 0, void 0, function () {
-        var padToTwo, seed;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    if (version > 99) {
-                        console.log("Swap market version cannot be greater than 99");
-                        return [2 /*return*/, null];
-                    }
-                    if (version < 0) {
-                        console.log("Version cannot be less than zero");
-                        return [2 /*return*/, null];
-                    }
-                    padToTwo = function (n) { return (n <= 99 ? ("0" + n).slice(-2) : n); };
-                    seed = baseMint.toString().slice(0, 15) +
-                        quoteMint.toString().slice(0, 15) +
-                        padToTwo(version);
-                    return [4 /*yield*/, web3_js_1.PublicKey.createWithSeed(pubkeys_1.WORM_MARKET_BASE, seed, pubkeys_1.DEX_PID)];
-                case 1: return [2 /*return*/, _a.sent()];
+                    _c.label = 2;
+                case 2: return [2 /*return*/, null];
             }
         });
     });
