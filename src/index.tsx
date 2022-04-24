@@ -88,6 +88,7 @@ export default function Swap(props: SwapProps): ReactElement {
                 contentStyle={contentStyle}
                 swapTokenContainerStyle={swapTokenContainerStyle}
               />
+              
             </SwapContextProvider>
       </TokenListContextProvider>
     </ThemeProvider>

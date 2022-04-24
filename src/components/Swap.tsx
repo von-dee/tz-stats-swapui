@@ -321,14 +321,27 @@ export function SwapButton() {
   const {
     fromMint,
     toMint,
+    fromAmount,
+    toAmount
   } = useSwapContext();
   
   const canSwap = useCanSwap();
+
+  function sayHello() {
+    
+    console.log('Hello!');
+    console.log(fromMint);
+    console.log(toMint);
+    console.log(fromAmount);
+    console.log(toAmount);
+    
+  }
 
   return (
     <Button
       variant="contained"
       className={styles.swapButton}
+      onClick={sayHello}
     >
       {canSwap
             ? `Swap`
@@ -337,3 +350,5 @@ export function SwapButton() {
     </Button>
   );
 }
+
+
