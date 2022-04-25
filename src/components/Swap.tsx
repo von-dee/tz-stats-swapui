@@ -150,7 +150,7 @@ export function ArrowButton() {
 }
 
 function SwapFromForm({ style }: { style?: any }) {
-  const { fromMint, setFromMint, fromAmount, setFromAmount } = useSwapContext();
+  const { fromMint, setFromMint, fromAmount, setFromAmount, setToAmount } = useSwapContext();
   return (
     <SwapTokenForm
       from
@@ -158,13 +158,14 @@ function SwapFromForm({ style }: { style?: any }) {
       mint={fromMint}
       setMint={setFromMint}
       amount={fromAmount}
-      setAmount={setFromAmount}
+      setAmountFrom={setFromAmount}
+      setAmountTo={setToAmount}
     />
   );
 }
 
 function SwapToForm({ style }: { style?: any }) {
-  const { toMint, setToMint, toAmount, setToAmount } = useSwapContext();
+  const { toMint, setToMint, toAmount, setFromAmount, setToAmount } = useSwapContext();
   return (
     <SwapTokenForm
       from={false}
@@ -172,7 +173,8 @@ function SwapToForm({ style }: { style?: any }) {
       mint={toMint}
       setMint={setToMint}
       amount={toAmount}
-      setAmount={setToAmount}
+      setAmountTo={setToAmount}
+      setAmountFrom={setFromAmount}
     />
   );
 }
@@ -183,14 +185,16 @@ export function SwapTokenForm({
   mint,
   setMint,
   amount,
-  setAmount,
+  setAmountFrom,
+  setAmountTo,
 }: {
   from: boolean;
   style?: any;
   mint: any;
   setMint: (m: any) => void;
   amount: number;
-  setAmount: (a: number) => void;
+  setAmountFrom: (a: number) => void;
+  setAmountTo: (a: number) => void;
 }) {
   const styles = useStyles();
 
@@ -211,6 +215,20 @@ export function SwapTokenForm({
         })
       : amount;
 
+  function calculateAmount(amt: any) {
+
+    if(from){
+      console.log('from');
+      setAmountFrom(amt); 
+      setAmountTo(amt*0.5); 
+    }else{
+      console.log('To');
+      setAmountTo(amt);
+      setAmountFrom(amt*1.5); 
+    }
+
+  }
+
   return (
     <div className={styles.swapTokenFormContainer} style={style}>
       
@@ -229,7 +247,7 @@ export function SwapTokenForm({
         <TextField
           type="number"
           value={formattedAmount}
-          onChange={(e) => setAmount(parseFloat(e.target.value))}
+          onChange={(e) => calculateAmount(parseFloat(e.target.value))}
           InputProps={{
             disableUnderline: true,
             classes: {
@@ -247,7 +265,7 @@ export function SwapTokenForm({
           {from && !!balance ? (
             <span
               className={styles.maxButton}
-              onClick={() => setAmount(balance)}
+              onClick={() => calculateAmount(balance)}
             >
               MAX
             </span>

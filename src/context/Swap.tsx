@@ -144,7 +144,6 @@ export function useCanSwap(): boolean {
   const { wormholeMap, solletMap } = useTokenListContext();
   const fromWallet = useOwnedTokenAccount(fromMint);
 
-
   return (
     // From wallet exists.
     fromWallet !== undefined &&
