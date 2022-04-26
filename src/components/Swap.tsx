@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import {
   makeStyles,
   Card,
@@ -10,12 +10,18 @@ import {
 import { ImportExportRounded } from "@material-ui/icons";
 import { useSwapContext } from "../context/Swap";
 
+
 import { useTokenMap } from "../context/TokenList";
 import { useMint, useOwnedTokenAccount } from "../context/Token";
 import { useCanSwap } from "../context/Swap";
 import TokenDialog from "./TokenDialog";
 import { SettingsButton } from "./Settings";
 import { InfoLabel } from "./Info";
+
+import { swap, fromAmountChange, toAmountChange } from "../core/main";
+
+
+
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -221,6 +227,7 @@ export function SwapTokenForm({
       console.log('from');
       setAmountFrom(amt); 
       setAmountTo(amt*0.5); 
+      fromAmountChange();
     }else{
       console.log('To');
       setAmountTo(amt);

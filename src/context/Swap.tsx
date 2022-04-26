@@ -4,12 +4,14 @@ import { useAsync } from "react-async-hook";
 
 
 import { Market } from "@project-serum/serum";
-import { TEZ_MINT, QUP_MINT } from "../utils/pubkeys";
+import { TEZ_MINT, QUP_MINT, QUP_TOKEN, TEZ_TOKEN } from "../utils/pubkeys";
 
 import {
   useTokenListContext
 } from "./TokenList";
 import { useOwnedTokenAccount } from "../context/Token";
+
+import { toTokenContext, fromTokenContext, WalletContext } from '../context/TokenContext';
 
 const DEFAULT_SLIPPAGE_PERCENT = 0.5;
 
@@ -73,6 +75,19 @@ export function SwapContextProvider(props: any) {
   const [isStrict, setIsStrict] = useState(false);
   const [slippage, setSlippage] = useState(DEFAULT_SLIPPAGE_PERCENT);
   const [fairOverride, setFairOverride] = useState<number | null>(null);
+
+  
+
+  const { toToken, settoToken } = useContext(toTokenContext);
+
+  const { fromToken, setfromToken } = useContext(fromTokenContext);
+
+  const { app, setApp } = useContext(WalletContext)
+
+  settoToken((a: any) => (QUP_TOKEN));
+  setApp((a: any) => ({ ...a, network: "e.target.value" }));
+  setfromToken((a: any) => (TEZ_TOKEN));
+  
   
   const referral = props.referral;
 
