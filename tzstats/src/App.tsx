@@ -30,11 +30,16 @@ function AppInner() {
   const styles = useStyles();
   const [isConnected, setIsConnected] = useState(false);
   const [tokenList, setTokenList] = useState();
+  const [tezosWallet, setTezosWallet] = useState("wallet");
+  const [swapTheme, setSwapTheme] = useState("white-content");
 
   async function getToken(){
     try{
       
-      const response = await fetch('https://raw.githubusercontent.com/von-dee/swaptzstats/main/tezos.tokenlist.json');
+      // const response = await fetch('https://raw.githubusercontent.com/von-dee/swaptzstats/main/tezos.tokenlist.json');
+      // const response = await fetch('https://raw.githubusercontent.com/von-dee/swaptzstats/main/tezos.main.qv1.tokenlist.json');
+      const response = await fetch('https://raw.githubusercontent.com/von-dee/swaptzstats/main/tezos.main.ith.qv1.tokenlist.json');
+      
       const data = await response.json();
       console.log(data);
       setTokenList(data.tokens);
@@ -63,7 +68,7 @@ function AppInner() {
       >
         {!isConnected ? "Connect" : "Disconnect"}
       </Button>
-      {tokenList && <Swap tokenList={tokenList} />}
+      {tokenList && <Swap swapTheme={swapTheme} tezosWallet={tezosWallet} tokenList={tokenList} />}
     </Grid>
   );
 }

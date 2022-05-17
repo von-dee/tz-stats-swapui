@@ -103,7 +103,7 @@ function SettingsDetails() {
   };
 
   return (
-    <div style={{ padding: "15px", width: "305px", background: "#22242a" }}>
+    <div style={{ padding: "15px", width: "305px", background: "#323232" }}>
       <Typography style={{ fontWeight: "bold", color: "white" }}>Settings</Typography>
       <div>
         <div style={{ marginTop: "10px" }}>

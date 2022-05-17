@@ -1,7 +1,7 @@
 import { ReactElement } from "react";
 import { Swap as SwapClient } from "@project-serum/swap";
 import {
-  createMuiTheme,
+  createTheme,
   ThemeOptions,
   ThemeProvider,
 } from "@material-ui/core/styles";
@@ -47,6 +47,8 @@ export default function Swap(props: SwapProps): ReactElement {
     swapTokenContainerStyle,
     materialTheme,
     tokenList,
+    tezosWallet,
+    swapTheme,
     fromMint,
     toMint,
     fromAmount,
@@ -56,22 +58,60 @@ export default function Swap(props: SwapProps): ReactElement {
 
   // @ts-ignore
   const swapClient = new SwapClient(tokenList);
-  const theme = createMuiTheme(
-    materialTheme || {
-      palette: {
+
+  var mode:any = (swapTheme === 'light'
+  ? {
+      // palette values for light mode
+      primary: {
+        main: "#FFFFFF",
+        contrastText: "#FFFFFF",
+      },
+      secondary: {
+        main: "#323232",
+        light: "#595959",
+      },
+      error: {
+        main: "#ff6b6b",
+      },
+  
+    }
+  : (swapTheme === 'solardark'
+  ? {
+      // palette values for light mode
+      primary: {
+        main: "#012b36",
+        contrastText: "#FFFFFF",
+      },
+      secondary: {
+        main: "#FFFFFF",
+        light: "#595959",
+      },
+      error: {
+        main: "#ff6b6b",
+      },
+  
+    }
+  : {
+      // palette values for dark mode
         primary: {
-          main: "#2196F3",
+          main: "#323232",
           contrastText: "#FFFFFF",
         },
         secondary: {
-          main: "#E0E0E0",
+          main: "#FFFFFF",
           light: "#595959",
         },
         error: {
           main: "#ff6b6b",
         },
-      },
-    }
+    
+    }));
+    
+  const theme = createTheme(
+    materialTheme || 
+  {
+    palette: mode,
+  }
   );
   return (
     <ThemeProvider theme={theme}>
@@ -82,6 +122,7 @@ export default function Swap(props: SwapProps): ReactElement {
               fromAmount={fromAmount}
               toAmount={toAmount}
               referral={referral}
+              tezosWallet={tezosWallet}
             >
               <SwapCard
                 containerStyle={containerStyle}
@@ -109,6 +150,10 @@ export type SwapProps = {
    * Token list providing information for tokens used.
    */
   tokenList: any;
+
+  swapTheme: any;
+
+  tezosWallet: any;
 
   /**
    * Wallet address to which referral fees are sent (i.e. a SOL address).

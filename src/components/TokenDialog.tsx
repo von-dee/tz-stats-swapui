@@ -7,7 +7,8 @@ import {
   TextField,
   List,
   ListItem,
-  Typography
+  Typography,
+  useTheme
 } from "@material-ui/core";
 import { TokenIcon } from "./Swap";
 import { useSwappableTokens } from "../context/TokenList";
@@ -49,6 +50,8 @@ export default function TokenDialog({
 }) {
   const [tabSelection, setTabSelection] = useState(0);
   const [tokenFilter, setTokenFilter] = useState("");
+  const theme = useTheme();
+
   const filter = tokenFilter.toLowerCase();
   const styles = useStyles();
   const { swappableTokens, swappableTokensSollet, swappableTokensWormhole } =
@@ -79,8 +82,8 @@ export default function TokenDialog({
       PaperProps={{
         style: {
           borderRadius: "10px",
-          background: "#22242a",
-          color: "white !important",
+          background: theme.palette.primary.main,
+          color: theme.palette.secondary.main,
           width: "420px",
         },
       }}
@@ -129,14 +132,14 @@ function TokenListItem({
   tokenInfo: any;
   onClick: (mint: any) => void;
 }) {
-  const mint = tokenInfo.address;
+  const mint = tokenInfo;
   return (
     <ListItem
       button
       onClick={() => onClick(mint)}
       style={{ padding: "10px 20px" }}
     >
-      <TokenIcon mint={mint} style={{ height: "30px", borderRadius: "15px", color: "white" }} />
+      <TokenIcon mint={mint.address} style={{ height: "30px", width: "30px", borderRadius: "15px", color: "white" }} />
       <TokenName tokenInfo={tokenInfo} />
     </ListItem>
   );

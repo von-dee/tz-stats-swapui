@@ -2,20 +2,33 @@ import * as assert from "assert";
 import React, { useContext, useState, useEffect } from "react";
 import { useAsync } from "react-async-hook";
 
-
 import { Market } from "@project-serum/serum";
-import { TEZ_MINT, QUP_MINT, QUP_TOKEN, TEZ_TOKEN } from "../utils/pubkeys";
+import { QUP_TOKEN, TEZ_TOKEN } from "../utils/pubkeys";
 
 import {
   useTokenListContext
 } from "./TokenList";
 import { useOwnedTokenAccount } from "../context/Token";
 
-import { toTokenContext, fromTokenContext, WalletContext } from '../context/TokenContext';
 
 const DEFAULT_SLIPPAGE_PERCENT = 0.5;
 
+
+
+export const themes = {
+  dark: "dark",
+  light: "light",
+};
+
 export type SwapContext = {
+
+  tezosWallet: any;
+  setTezosWallet: (m: any) => void;
+
+  swapTheme: any;
+  setSwapTheme: (m: any) => void;
+  changeTheme: (m: any) => void;
+
   // Mint being traded from. The user must own these tokens.
   fromMint: any;
   setFromMint: (m: any) => void;
@@ -67,8 +80,12 @@ export type SwapContext = {
 const _SwapContext = React.createContext<null | SwapContext>(null);
 
 export function SwapContextProvider(props: any) {
-  const [fromMint, setFromMint] = useState(props.fromMint ?? TEZ_MINT);
-  const [toMint, setToMint] = useState(props.toMint ?? QUP_MINT);
+  
+
+  const [tezosWallet, setTezosWallet] = useState(props.tezosWallet ?? null);
+  const [swapTheme, setSwapTheme] = useState(props.swapTheme ?? null);
+  const [fromMint, setFromMint] = useState(props.fromMint ?? TEZ_TOKEN);
+  const [toMint, setToMint] = useState(props.toMint ?? QUP_TOKEN);
   const [fromAmount, _setFromAmount] = useState(props.fromAmount ?? 0);
   const [toAmount, _setToAmount] = useState(props.toAmount ?? 0);
   const [isClosingNewAccounts, setIsClosingNewAccounts] = useState(false);
@@ -77,22 +94,27 @@ export function SwapContextProvider(props: any) {
   const [fairOverride, setFairOverride] = useState<number | null>(null);
 
   
-
-  const { toToken, settoToken } = useContext(toTokenContext);
-
-  const { fromToken, setfromToken } = useContext(fromTokenContext);
-
-  const { app, setApp } = useContext(WalletContext)
-
-  settoToken((a: any) => (QUP_TOKEN));
-  setApp((a: any) => ({ ...a, network: "e.target.value" }));
-  setfromToken((a: any) => (TEZ_TOKEN));
-  
-  
   const referral = props.referral;
 
   assert.ok(slippage >= 0);
 
+
+  // Start Handle Theme Changes
+
+  const changeTheme = (theme: any) => {
+    callThemeChange(theme);
+  }
+
+  useEffect(() => {
+      callThemeChange(swapTheme);
+  }, [swapTheme]);
+
+  function callThemeChange(theme: any){
+    setSwapTheme(theme);
+    localStorage.setItem("swapTheme", theme);
+  }
+
+  // End Handle Theme Changes
   
   const swapToFromMints = () => {
     const oldFrom = fromMint;
@@ -118,6 +140,11 @@ export function SwapContextProvider(props: any) {
   return (
     <_SwapContext.Provider
       value={{
+        tezosWallet,
+        setTezosWallet,
+        swapTheme,
+        setSwapTheme,
+        changeTheme,
         fromMint,
         setFromMint,
         toMint,

@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import React,{ useContext, useState, useEffect } from "react";
 import {
   makeStyles,
   Card,
@@ -17,20 +17,25 @@ import { useCanSwap } from "../context/Swap";
 import TokenDialog from "./TokenDialog";
 import { SettingsButton } from "./Settings";
 import { InfoLabel } from "./Info";
+import { DARK_THEME, LIGHT_THEME } from "../utils/theme";
+import { swapcall, fromAmountChange, toAmountChange } from "../core/main";
 
-import { swap, fromAmountChange, toAmountChange } from "../core/main";
 
+import {
+  getBalance,
+  getNetwork
+} from "../core/quipuswapv1/core";
 
+import { TezosToolkit } from '@taquito/taquito';
+import BigNumber from "bignumber.js";
 
 
 const useStyles = makeStyles((theme) => ({
   card: {
-    width: theme.spacing(50),
+    width: "100%",
     borderRadius: theme.spacing(2),
-    background: "#22242a",
-    border: "1px solid #aaaaaa36",
-    color: "white !important",
-    boxShadow: "0px 0px 30px 5px rgba(0,0,0,0.075)",
+    background: theme.palette.primary.main,
+    color: theme.palette.secondary.main,
     padding: theme.spacing(2),
   },
   tab: {
@@ -43,8 +48,8 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     textTransform: "capitalize",
     borderRadius: theme.spacing(2),
-    backgroundColor: "#323741",
-    color: "white !important",
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.secondary.main,
     fontSize: 16,
     fontWeight: 700,
     padding: theme.spacing(1.5),
@@ -57,18 +62,21 @@ const useStyles = makeStyles((theme) => ({
   amountInput: {
     fontSize: 22,
     fontWeight: 600,
-    color: "white !important"
+    color: theme.palette.secondary.main
   },
   input: {
     textAlign: "left",
-    color: "white !important"
+    color: theme.palette.secondary.main,
+    background: theme.palette.primary.main,
+    // border: "1px solid #f1f1f1 !important",
+    border: "none !important"
   },
   swapTokenFormContainer: {
     borderRadius: theme.spacing(2),
-    boxShadow: "0px 0px 15px 2px rgba(33,150,243,0.1)",
+    boxShadow: "0px 0px 15px 2px rgb(84 93 100 / 0.1)",
     display: "flex",
     justifyContent: "space-between",
-    background: "#323741",
+    backgroundColor: theme.palette.primary.main,
     padding: "5px 10px 5px 15px",
     border: "1px solid #ffffff1c"
   },
@@ -77,13 +85,13 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     justifyContent: "flex-end",
     flexDirection: "column",
-    width: "30%",
+    width: "40%",
   },
   balanceContainer: {
     display: "flex",
     alignItems: "center",
     padding: "2px 0px",
-    fontSize: "12px",
+    fontSize: "60%",
     color: "#bebebe"
   },
   maxButton: {
@@ -98,22 +106,23 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
     cursor: "pointer",
     marginBottom: theme.spacing(1),
-    border: "1px solid #585858",
+    border: "1px solid #f1f1f1 !important",
     borderRadius: "20px",
-    background: "#161616"
   },
 }));
 
 export default function SwapCard({
   containerStyle,
   contentStyle,
-  swapTokenContainerStyle,
+  swapTokenContainerStyle
 }: {
   containerStyle?: any;
   contentStyle?: any;
   swapTokenContainerStyle?: any;
 }) {
+  
   const styles = useStyles();
+
   return (
     <Card className={styles.card} style={containerStyle}>
       <div style={contentStyle}>
@@ -149,21 +158,26 @@ export function ArrowButton() {
     <ImportExportRounded
       className={styles.swapToFromButton}
       fontSize="medium"
-      htmlColor={theme.palette.primary.main}
+      htmlColor={theme.palette.secondary.main}
       onClick={swapToFromMints}
     />
   );
 }
 
 function SwapFromForm({ style }: { style?: any }) {
-  const { fromMint, setFromMint, fromAmount, setFromAmount, setToAmount } = useSwapContext();
+  const { tezosWallet, fromMint, toMint,  setFromMint, fromAmount, toAmount, setFromAmount, setToAmount } = useSwapContext();
   return (
     <SwapTokenForm
+      tezosWallet={tezosWallet}
       from
       style={style}
-      mint={fromMint}
+      mint={fromMint.address}
+      fromToken={fromMint}
+      toToken={toMint}
       setMint={setFromMint}
       amount={fromAmount}
+      fromamount={fromAmount}
+      toamount={toAmount}
       setAmountFrom={setFromAmount}
       setAmountTo={setToAmount}
     />
@@ -171,14 +185,19 @@ function SwapFromForm({ style }: { style?: any }) {
 }
 
 function SwapToForm({ style }: { style?: any }) {
-  const { toMint, setToMint, toAmount, setFromAmount, setToAmount } = useSwapContext();
+  const { tezosWallet, toMint, fromMint, setToMint, fromAmount, toAmount, setFromAmount, setToAmount } = useSwapContext();
   return (
     <SwapTokenForm
+      tezosWallet={tezosWallet}
       from={false}
       style={style}
-      mint={toMint}
+      mint={toMint.address}
+      toToken={toMint}
+      fromToken={fromMint}
       setMint={setToMint}
       amount={toAmount}
+      fromamount={fromAmount}
+      toamount={toAmount}
       setAmountTo={setToAmount}
       setAmountFrom={setFromAmount}
     />
@@ -186,19 +205,29 @@ function SwapToForm({ style }: { style?: any }) {
 }
 
 export function SwapTokenForm({
+  tezosWallet,
   from,
   style,
   mint,
+  toToken,
+  fromToken,
   setMint,
   amount,
+  fromamount,
+  toamount,
   setAmountFrom,
   setAmountTo,
 }: {
   from: boolean;
   style?: any;
+  tezosWallet: any;
   mint: any;
+  toToken: any;
+  fromToken: any;
   setMint: (m: any) => void;
   amount: number;
+  fromamount: number;
+  toamount: number;
   setAmountFrom: (a: number) => void;
   setAmountTo: (a: number) => void;
 }) {
@@ -208,10 +237,46 @@ export function SwapTokenForm({
   const tokenAccount = useOwnedTokenAccount(mint);
   const mintAccount = useMint(mint);
 
-  const balance =
+
+  const [bal, setBal] = React.useState(0);
+  
+  const network = getNetwork();
+
+  const me  = tezosWallet.wallet._pkh;
+
+  const selectedToken = from? fromToken : toToken;
+
+  selectedToken.id = selectedToken.address;
+  selectedToken.tokenType = "FA1.2"
+  
+
+  let balance =
     tokenAccount &&
     mintAccount &&
     tokenAccount.account.amount.toNumber() / 10 ** mintAccount.decimals;
+  
+  if(me !== undefined){   
+    const balanc = getBal(me, selectedToken);
+  }
+
+  async function getBal(me: any, selectedToken: any) {
+    let response = await getBalance(me, selectedToken).then(time => {
+      return time;
+    })
+    .catch(error => {
+      console.log(error);
+    });
+    
+    if(response != undefined){
+      response = response.toNumber() / 10 ** selectedToken.decimals;
+    }else{
+      response = 0;
+    }
+
+    setBal(response);
+    
+    return response;
+  }
 
   const formattedAmount =
     mintAccount && amount
@@ -221,17 +286,41 @@ export function SwapTokenForm({
         })
       : amount;
 
-  function calculateAmount(amt: any) {
+    async function calculateAmount(amt: any) {
+
+    let tokens = null;
 
     if(from){
-      console.log('from');
       setAmountFrom(amt); 
-      setAmountTo(amt*0.5); 
-      fromAmountChange();
+      tokens = {
+        inputToken: fromToken,
+        outputToken: toToken,
+        inputDexAddress: fromToken.dexaddress,
+        outputDexAddress: toToken.dexaddress,
+        inputAmount: amt,
+        outputAmount: toamount
+      };
     }else{
-      console.log('To');
       setAmountTo(amt);
-      setAmountFrom(amt*1.5); 
+      tokens = {
+        inputToken: fromToken,
+        outputToken: toToken,
+        inputDexAddress: fromToken.dexaddress,
+        outputDexAddress: toToken.dexaddress,
+        inputAmount: fromamount,
+        outputAmount: amt
+      };
+    }    
+
+    if(from){
+      setAmountFrom(amt); 
+      const amts = await fromAmountChange(tokens);
+      setAmountTo(amts);
+      
+    }else{
+      setAmountTo(amt);
+      const amts = await toAmountChange(tokens);
+      setAmountFrom(amts); 
     }
 
   }
@@ -266,9 +355,11 @@ export function SwapTokenForm({
       </div>
       <div className={styles.swapTokenSelectorContainer}>
         <Typography className={styles.balanceContainer}>
-          {tokenAccount && mintAccount
-            ? `Balance: ${balance?.toFixed(mintAccount.decimals)}`
-            : `Balance : 0.00`}
+
+          {bal
+            ? `Bal: ${bal}`
+            : `Bal : 0.00`}
+
           {from && !!balance ? (
             <span
               className={styles.maxButton}
@@ -296,8 +387,8 @@ function TokenButton({
 
   return (
     <div onClick={onClick} className={styles.tokenButton}>
-      <TokenIcon mint={mint} style={{ height: theme.spacing(3), paddingLeft: theme.spacing(1) }} />
-      <TokenName mint={mint} style={{ fontSize: 14, fontWeight: 700 }} />
+      <TokenIcon mint={mint} style={{ height: theme.spacing(2), width: theme.spacing(3), paddingLeft: theme.spacing(1) }} />
+      <TokenName mint={mint} style={{ fontSize: "80%", fontWeight: 700 }} />
     </div>
   );
 }
@@ -331,7 +422,6 @@ function TokenName({ mint, style }: { mint: any; style: any }) {
   return (
     <Typography
       style={{
-        marginLeft: theme.spacing(2),
         marginRight: theme.spacing(1),
         ...style,
       }}
@@ -344,21 +434,31 @@ function TokenName({ mint, style }: { mint: any; style: any }) {
 export function SwapButton() {
   const styles = useStyles();
   const {
-    fromMint,
-    toMint,
-    fromAmount,
-    toAmount
+    toMint, 
+    fromMint, 
+    fromAmount, 
+    toAmount,
+    tezosWallet
   } = useSwapContext();
-  
-  const canSwap = useCanSwap();
 
-  function sayHello() {
+  const canSwap = (tezosWallet.wallet._pkh == undefined) ? false :true;
+  
+
+  let tokens = {
+    inputToken: fromMint,
+    outputToken: toMint,
+    inputDexAddress: fromMint.dexaddress,
+    outputDexAddress: toMint.dexaddress,
+    inputAmount: fromAmount,
+    outputAmount: toAmount,
+    tezosWallet: tezosWallet
+  }
+
+  function swapTokenCall(tokens: any, wallet: any) {
     
-    console.log('Hello!');
-    console.log(fromMint);
-    console.log(toMint);
-    console.log(fromAmount);
-    console.log(toAmount);
+    if(canSwap){
+      swapcall(tokens, wallet);
+    }
     
   }
 
@@ -366,7 +466,7 @@ export function SwapButton() {
     <Button
       variant="contained"
       className={styles.swapButton}
-      onClick={sayHello}
+      onClick={() => swapTokenCall(tokens, tezosWallet)}
     >
       {canSwap
             ? `Swap`

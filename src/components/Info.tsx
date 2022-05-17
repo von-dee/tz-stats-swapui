@@ -11,9 +11,9 @@ import { useTokenMap } from "../context/TokenList";
 import { useSwapContext } from "../context/Swap";
 import { SettingsButton } from "./Settings";
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles((theme) => ({
   infoLabel: {
-    color: "white !important",
+    color: theme.palette.secondary.main,
     marginTop: "20px",
     marginBottom: "20px",
     alignItems: "left"
