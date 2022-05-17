@@ -10,7 +10,9 @@ import {
   Switch,
   FormControlLabel,
   FormGroup,
+  useTheme,
 } from "@material-ui/core";
+
 import { SettingsOutlined as Settings } from "@material-ui/icons";
 import PopupState, { bindTrigger, bindPopover } from "material-ui-popup-state";
 import { useSwapContext } from "../context/Swap";
@@ -92,6 +94,7 @@ export function SettingsButton() {
 
 function SettingsDetails() {
   const styles = useStyles();
+  const theme = useTheme();
 
   const { slippage, setSlippage, fairOverride, setFairOverride } =
     useSwapContext();
@@ -103,7 +106,7 @@ function SettingsDetails() {
   };
 
   return (
-    <div style={{ padding: "15px", width: "305px", background: "#323232" }}>
+    <div style={{ padding: "15px", width: "305px", background: theme.palette.primary.main }}>
       <Typography style={{ fontWeight: "bold", color: "white" }}>Settings</Typography>
       <div>
         <div style={{ marginTop: "10px" }}>
@@ -129,64 +132,16 @@ function SettingsDetails() {
             }}
           />
         </div>
-        <div style={{ marginTop: "10px" }}>
-          <Typography style={{ fontSize: "12px", color: "white" }}>
-            Fair price
-          </Typography>
-          <div style={{ display: "flex" }}>
-            <TextField
-              type="number"
-              placeholder="Fair price override"
-              value={fair}
-              onChange={(e) => setFairOverride(parseFloat(e.target.value))}
-              style={{
-                marginRight: "10px",
-                flex: 1,
-                display: "flex",
-                justifyContent: "center",
-                flexDirection: "column",
-              }}
-              InputProps={{
-                classes: {
-                  input: styles.input,
-                }
-              }}
-              disabled={fairOverride === null}
-            />
-            <Button
-              component="div"
-              variant="contained"
-              onClick={() => {
-                if (fair === undefined) {
-                  console.error("Fair is undefined");
-                  return;
-                }
-                if (fairOverride === null) {
-                  setFairOverride(fair);
-                } else {
-                  setFairOverride(null);
-                }
-              }}
-              className={
-                fairOverride === null
-                  ? styles.fairAutoSelected
-                  : styles.fairAuto
-              }
-            >
-              Auto
-            </Button>
-          </div>
-        </div>
         <div style={{ margin: "10px 0px" }}>
           <CloseNewAccountsSwitch />
         </div>
         <Button
           variant="contained"
           fullWidth
-          style={{ color: "#fff" }}
-          onClick={() => setShowSettingsDialog(true)}
+          style={{ color: "#fff", background: theme.palette.primary.main }}
+          onClick={() => setShowSettingsDialog(false)}
         >
-          Manage Dex Accounts
+          Set Slippage
         </Button>
       </div>
       <OpenOrdersDialog

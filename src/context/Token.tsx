@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 
 import { useAsync } from "react-async-hook";
-import { Provider, BN } from "@project-serum/anchor";
+
 import {
   getOwnedAssociatedTokenAccounts,
 } from "../utils/tokens";
 
 export type TokenContext = {
-  provider: Provider;
+  // provider: Provider;
 };
 const _TokenContext = React.createContext<TokenContext | null>(null);
 
@@ -42,7 +42,7 @@ export function TokenContextProvider(props: any) {
             publicKey: provider.wallet.publicKey,
             // @ts-ignore
             account: {
-              amount: new BN(acc.lamports),
+              // amount: new BN(acc.lamports),
               // mint: SOL_MINT,
             },
           });

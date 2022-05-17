@@ -1,5 +1,5 @@
 import { ReactElement } from "react";
-import { Swap as SwapClient } from "@project-serum/swap";
+
 import {
   createTheme,
   ThemeOptions,
@@ -9,12 +9,6 @@ import {
   SwapContextProvider,
   useSwapContext,
 } from "./context/Swap";
-import {
-  DexContextProvider,
-  useBbo,
-  useFairRoute,
-  useMarketName,
-} from "./context/Dex";
 import { TokenListContextProvider, useTokenMap } from "./context/TokenList";
 import { TokenContextProvider, useMint } from "./context/Token";
 import SwapCard, {
@@ -57,7 +51,6 @@ export default function Swap(props: SwapProps): ReactElement {
   } = props;
 
   // @ts-ignore
-  const swapClient = new SwapClient(tokenList);
 
   var mode:any = (swapTheme === 'light'
   ? {
@@ -224,10 +217,5 @@ export {
   useTokenMap,
   // Token.
   TokenContextProvider,
-  useMint,
-  // Dex.
-  DexContextProvider,
-  useFairRoute,
-  useMarketName,
-  useBbo,
+  useMint
 };

@@ -20,17 +20,7 @@ import {
   getNetwork
 } from "./core";
 
-import { TezosToolkit } from '@taquito/taquito';
 import { OpKind, WalletOperation } from "@taquito/taquito";
-
-
-/*
-  import store, { getAccount, useWallet } from "@/store";
-  import {
-    getBalance
-  } from "@/core";
-  
-*/
 
   
 export function handleInputAmountChange(tokens: any) {
@@ -183,13 +173,14 @@ export async function swap(tokens: any, wallet: any) {
 
   
   const network = getNetwork();
-  const tezos = wallet;
+  const tezos = wallet.walletSdk;
+
   let swapStatus = null;
 
   try {
 
 
-    const me = wallet.wallet._pkh;
+    const me = wallet.walletSdk.wallet._pkh;
 
     const recipient = me;
 
@@ -419,15 +410,38 @@ export async function swap(tokens: any, wallet: any) {
     const response = confirmOperation(tezos, operation!.opHash);
 
     console.log("response");
-    console.log(response); 
+    console.log(operation!.opHash); 
 
-    // notifyConfirm(
-      return response;
-    // );
+    let ophash = operation!.opHash;
+    let ophash_len = ophash.length;
+    ophash = ophash.slice(0, 5) + '...' + ophash.slice((ophash_len - 5), ophash_len)
+    let url = "https://ithaca.tzstats.com/"+operation!.opHash;
+    const Msg = () => (
+      <div style={{ fontSize: '1.1em', textAlign: 'center' }} >
+        <a href={url} target="_blank"><b> {ophash} &nbsp;</b> Open in Blockexplorer</a>
+      </div>
+    )
+
+    wallet.toast.success(<Msg />, {
+      autoClose: false
+    });
+
+    return response;
+
   } catch (err: any) {
     console.error(err);
-    // notifyError(err);
     console.log(err);
+
+    const Msg = () => (
+      <div style={{ fontSize: '1.1em', textAlign: 'center' }} >
+        <b> Ops There was a problem. Try again!</b>
+      </div>
+    )
+
+    wallet.toast.success(<Msg />, {
+      autoClose: false
+    });
+    
 
     const msg = err.message;
     return msg;

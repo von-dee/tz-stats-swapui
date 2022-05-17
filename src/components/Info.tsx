@@ -41,9 +41,10 @@ const useStyles = makeStyles((theme) => ({
 export function InfoLabel() {
   const styles = useStyles();
 
-  const { fromMint, toMint } = useSwapContext();
+  const { swapParams, slippage } = useSwapContext();
 
   const tokenMap = useTokenMap();
+
 
   return (
     <div className={styles.infoLabel}>
@@ -60,7 +61,7 @@ export function InfoLabel() {
           Slippage Tolerance
         </Typography>
         <Typography className={styles.labelValue}>
-          0
+          {slippage}%
         </Typography>
       </div>
 
@@ -69,7 +70,7 @@ export function InfoLabel() {
           Minimum Received
         </Typography>
         <Typography className={styles.labelValue}>
-          0
+        {swapParams.minout}
         </Typography>
       </div>
 
@@ -78,7 +79,7 @@ export function InfoLabel() {
           Swap Fee
         </Typography>
         <Typography className={styles.labelValue}>
-          0
+        {swapParams.swapfee}
         </Typography>
       </div>
     </div>

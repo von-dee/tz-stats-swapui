@@ -1,4 +1,4 @@
-import React,{ useContext, useState, useEffect } from "react";
+import React,{ useState} from "react";
 import {
   makeStyles,
   Card,
@@ -6,6 +6,7 @@ import {
   Typography,
   TextField,
   useTheme,
+  CircularProgress
 } from "@material-ui/core";
 import { ImportExportRounded } from "@material-ui/icons";
 import { useSwapContext } from "../context/Swap";
@@ -13,21 +14,15 @@ import { useSwapContext } from "../context/Swap";
 
 import { useTokenMap } from "../context/TokenList";
 import { useMint, useOwnedTokenAccount } from "../context/Token";
-import { useCanSwap } from "../context/Swap";
 import TokenDialog from "./TokenDialog";
 import { SettingsButton } from "./Settings";
 import { InfoLabel } from "./Info";
-import { DARK_THEME, LIGHT_THEME } from "../utils/theme";
 import { swapcall, fromAmountChange, toAmountChange } from "../core/main";
-
 
 import {
   getBalance,
   getNetwork
 } from "../core/quipuswapv1/core";
-
-import { TezosToolkit } from '@taquito/taquito';
-import BigNumber from "bignumber.js";
 
 
 const useStyles = makeStyles((theme) => ({
@@ -165,10 +160,12 @@ export function ArrowButton() {
 }
 
 function SwapFromForm({ style }: { style?: any }) {
-  const { tezosWallet, fromMint, toMint,  setFromMint, fromAmount, toAmount, setFromAmount, setToAmount } = useSwapContext();
+  const { tezosWallet, isLoading, setisLoading, fromMint, toMint,  setFromMint, fromAmount, toAmount, setFromAmount, setToAmount } = useSwapContext();
   return (
     <SwapTokenForm
       tezosWallet={tezosWallet}
+      isLoading={isLoading}
+      setisLoading={setisLoading}
       from
       style={style}
       mint={fromMint.address}
@@ -185,10 +182,12 @@ function SwapFromForm({ style }: { style?: any }) {
 }
 
 function SwapToForm({ style }: { style?: any }) {
-  const { tezosWallet, toMint, fromMint, setToMint, fromAmount, toAmount, setFromAmount, setToAmount } = useSwapContext();
+  const { tezosWallet, isLoading, setisLoading, toMint, fromMint, setToMint, fromAmount, toAmount, setFromAmount, setToAmount } = useSwapContext();
   return (
     <SwapTokenForm
       tezosWallet={tezosWallet}
+      isLoading={isLoading}
+      setisLoading={setisLoading}
       from={false}
       style={style}
       mint={toMint.address}
@@ -206,6 +205,8 @@ function SwapToForm({ style }: { style?: any }) {
 
 export function SwapTokenForm({
   tezosWallet,
+  isLoading,
+  setisLoading,
   from,
   style,
   mint,
@@ -219,6 +220,8 @@ export function SwapTokenForm({
   setAmountTo,
 }: {
   from: boolean;
+  isLoading: boolean;
+  setisLoading: (m: any) => void;
   style?: any;
   tezosWallet: any;
   mint: any;
@@ -242,7 +245,7 @@ export function SwapTokenForm({
   
   const network = getNetwork();
 
-  const me  = tezosWallet.wallet._pkh;
+  const me  = tezosWallet.walletSdk.wallet._pkh;
 
   const selectedToken = from? fromToken : toToken;
 
@@ -286,7 +289,7 @@ export function SwapTokenForm({
         })
       : amount;
 
-    async function calculateAmount(amt: any) {
+  async function calculateAmount(amt: any) {
 
     let tokens = null;
 
@@ -314,16 +317,35 @@ export function SwapTokenForm({
 
     if(from){
       setAmountFrom(amt); 
+      setisLoading(true);
       const amts = await fromAmountChange(tokens);
       setAmountTo(amts);
+      setisLoading(false);
       
     }else{
       setAmountTo(amt);
+      setisLoading(true);
       const amts = await toAmountChange(tokens);
       setAmountFrom(amts); 
+      setisLoading(false);
     }
 
   }
+
+  function closeTokenDialog(){
+    setShowTokenDialog(false);
+
+    let amt: any;
+    if(from){
+      amt = fromamount;
+    }else{
+      amt = toamount;
+    }
+
+    calculateAmount(amt);
+  }
+
+
 
   return (
     <div className={styles.swapTokenFormContainer} style={style}>
@@ -331,7 +353,7 @@ export function SwapTokenForm({
       <TokenDialog
         setMint={setMint}
         open={showTokenDialog}
-        onClose={() => setShowTokenDialog(false)}
+        onClose={() => closeTokenDialog()}
       />
       <div>
         <Typography className={styles.balanceContainer}>
@@ -357,7 +379,7 @@ export function SwapTokenForm({
         <Typography className={styles.balanceContainer}>
 
           {bal
-            ? `Bal: ${bal}`
+            ? `${bal}`
             : `Bal : 0.00`}
 
           {from && !!balance ? (
@@ -434,14 +456,16 @@ function TokenName({ mint, style }: { mint: any; style: any }) {
 export function SwapButton() {
   const styles = useStyles();
   const {
+    isLoading,
     toMint, 
     fromMint, 
     fromAmount, 
     toAmount,
-    tezosWallet
+    tezosWallet,
+    setisLoading
   } = useSwapContext();
 
-  const canSwap = (tezosWallet.wallet._pkh == undefined) ? false :true;
+  const canSwap = (tezosWallet.walletSdk.wallet._pkh == undefined) ? false :true;
   
 
   let tokens = {
@@ -451,13 +475,31 @@ export function SwapButton() {
     outputDexAddress: toMint.dexaddress,
     inputAmount: fromAmount,
     outputAmount: toAmount,
-    tezosWallet: tezosWallet
+    tezosWallet: tezosWallet.walletSdk
   }
 
-  function swapTokenCall(tokens: any, wallet: any) {
+  async function swapTokenCall(tokens: any, wallet: any) {
     
     if(canSwap){
-      swapcall(tokens, wallet);
+      if(!isLoading && (tokens.inputAmount == 0 || tokens.inputAmount == 0)){
+        const Msg = () => (
+          <div style={{ fontSize: '1.1em', textAlign: 'center' }} >
+            <b> Ops, please enter an amount </b>
+          </div>
+        )
+    
+        wallet.toast.success(<Msg />, {
+          autoClose: false
+        });
+        
+      }else{
+        setisLoading(true);
+        await swapcall(tokens, wallet);
+        setisLoading(false);
+      }
+
+    }else{
+      tezosWallet.connectWallet();
     }
     
   }
@@ -468,9 +510,15 @@ export function SwapButton() {
       className={styles.swapButton}
       onClick={() => swapTokenCall(tokens, tezosWallet)}
     >
-      {canSwap
-            ? `Swap`
-            : `Connect Wallet`}
+      {isLoading
+            ? <CircularProgress color="secondary" />
+            : <div>
+                {canSwap
+                    ? `Swap`
+                    : `Connect Wallet`}
+              </div>
+      }
+      
       
     </Button>
   );

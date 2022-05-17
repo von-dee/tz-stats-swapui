@@ -1,8 +1,6 @@
 import * as assert from "assert";
 import React, { useContext, useState, useEffect } from "react";
-import { useAsync } from "react-async-hook";
 
-import { Market } from "@project-serum/serum";
 import { QUP_TOKEN, TEZ_TOKEN } from "../utils/pubkeys";
 
 import {
@@ -24,6 +22,13 @@ export type SwapContext = {
 
   tezosWallet: any;
   setTezosWallet: (m: any) => void;
+
+  isLoading: any;
+  setisLoading: (m: any) => void;
+
+
+  swapParams: any;
+  setSwapParams: (m: any) => void;
 
   swapTheme: any;
   setSwapTheme: (m: any) => void;
@@ -83,6 +88,12 @@ export function SwapContextProvider(props: any) {
   
 
   const [tezosWallet, setTezosWallet] = useState(props.tezosWallet ?? null);
+  const [isLoading, setisLoading] = useState(false);
+  const [swapParams, setSwapParams] = useState({
+    slippage: 0.5,
+    minout: 0,
+    swapfee: 0
+  });
   const [swapTheme, setSwapTheme] = useState(props.swapTheme ?? null);
   const [fromMint, setFromMint] = useState(props.fromMint ?? TEZ_TOKEN);
   const [toMint, setToMint] = useState(props.toMint ?? QUP_TOKEN);
@@ -142,6 +153,10 @@ export function SwapContextProvider(props: any) {
       value={{
         tezosWallet,
         setTezosWallet,
+        isLoading,
+        setisLoading,
+        swapParams,
+        setSwapParams,
         swapTheme,
         setSwapTheme,
         changeTheme,
@@ -196,24 +211,4 @@ export function useCanSwap(): boolean {
     fromAmount > 0 &&
     toAmount > 0
   );
-}
-
-export function useReferral(fromMarket?: Market): any | undefined {
-  const { referral } = useSwapContext();
-  const asyncReferral = useAsync(async () => {
-    if (!referral) {
-      return undefined;
-    }
-    if (!fromMarket) {
-      return undefined;
-    }
-    
-
-    return null;
-  }, [fromMarket]);
-
-  if (!asyncReferral.result) {
-    return undefined;
-  }
-  return asyncReferral.result;
 }
