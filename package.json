@@ -1,9 +1,9 @@
 {
-  "name": "@blockwatch-cc/swap-ui",
+  "name": "@von-dee/tz-stats-swapui",
   "version": "0.2.5",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "homepage": "https://github.com/blockwatch-cc/tzswap",
+  "homepage": "https://github.com/von-dee/tz-stats-swapui",
   "license": "Apache-2.0",
   "dependencies": {
     "@project-serum/serum": "^0.13.58",
